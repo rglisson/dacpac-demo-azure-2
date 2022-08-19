@@ -1,0 +1,48 @@
+name: Build_$(BuildID)
+pr: none
+
+jobs: 
+- job: PackageDACPAC
+  condition: succeeded()
+  pool:
+    vmImage: 'windows-2019'
+
+  variables:
+    solution: '.\dacpac-demo-azure\DatabaseProjects\DatabaseProjects.sln'
+    buildPlatform: 'Any CPU'
+    buildConfiguration: 'Release'
+
+  steps:
+  - checkout: self
+    persistCredentials: true
+
+  - task: VSBuild@1
+    displayName: Compile Solution
+    inputs:
+      solution: '.\DatabaseProjects\DatabaseProjects.sln'
+      vsVersion: '16.0'
+      msbuildArgs: '/m /nologo /t:Build /p:Configuration=Release /p:TreatWarningsAsErrors=true /p:TreatTSqlWarningsAsErrors=true'
+      platform: '$(buildPlatform)'
+      clean: true
+    condition: succeeded()
+  
+  - task: ArchiveFiles@2
+    displayName: Package DACPAC
+    inputs:
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)\DatabaseProjects\PortalDatabase\bin\Release\'
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/DACPAC-demo!$(Build.BuildId).zip'
+      replaceExistingArchive: true
+ 
+  - task: CmdLine@2
+    displayName: Add DACPAC file
+    inputs:
+      script: |
+        copy "$(System.DefaultWorkingDirectory)\DatabaseProjects\PortalDatabase\bin\Release\*.dacpac" "$(Build.ArtifactStagingDirectory)"
+ 
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Artifacts
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'DACPACs'
+      publishLocation: 'Container'
