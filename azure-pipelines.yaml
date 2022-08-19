@@ -8,7 +8,7 @@ jobs:
     vmImage: 'windows-2019'
 
   variables:
-    solution: '.\dacpac-demo-azure\DatabaseProjects\DatabaseProjects.sln'
+    solution: '.\dacpac-demo-azure-2\DatabaseProjects\DatabaseProjects.sln'
     buildPlatform: 'Any CPU'
     buildConfiguration: 'Release'
 
